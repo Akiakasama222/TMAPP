@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Assignment Board</title>
+<style>
+:root{--h:285;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:hsl(var(--h) 85% 88%);--col:hsl(var(--h) 90% 94%);--card:hsl(var(--h) 100% 98%);--ink:#1d1526;--soft:hsl(var(--h) 20% 40%);--acc:hsl(var(--h) 55% 45%);--line:hsl(var(--h) 60% 75%)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:Poppins,"Segoe UI",system-ui,sans-serif;font-size:clamp(14px,1.15vw,19px);display:flex;flex-direction:column;overflow:hidden}
+button{font:inherit;border:0;background:#fff;color:var(--ink);border-radius:.7em;min-width:2.4em;height:2.4em;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex:none}
+button:hover{background:hsl(var(--h) 100% 96%)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--acc);outline-offset:1px}
+svg{width:1.15em;height:1.15em;fill:currentColor}
+.danger.arm{background:#c62839;color:#fff;padding:0 .8em}
+.top{display:flex;gap:.6em;padding:.7em 1em;align-items:center;flex:none}
+.top .bar{display:none;background:var(--col);padding:.6em 1em;border-radius:1em;align-items:center}
+.top .bar.on{display:flex}
+input[type=range]{-webkit-appearance:none;appearance:none;width:min(36vw,420px);height:.6em;border-radius:1em;background:linear-gradient(90deg,red,#ff0,#0f0,#0ff,#00f,#f0f,red)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:1.6em;height:1.6em;border-radius:50%;background:#fff;box-shadow:0 1px 4px #0006}
+input[type=range]::-moz-range-thumb{width:1.6em;height:1.6em;border:0;border-radius:50%;background:#fff}
+.main{flex:1;display:flex;min-height:0}
+.board{flex:1;min-width:0;display:flex;gap:1em;padding:0 1em 1em;overflow-x:auto;align-items:stretch}
+.col{width:clamp(250px,24vw,400px);flex:none;background:var(--col);border-radius:1em;padding:.6em;display:flex;flex-direction:column;gap:.6em}
+.head{display:flex;gap:.4em;align-items:center}
+.name{flex:1;min-width:0;background:#fff;border-radius:.7em;height:2.4em;display:flex;align-items:center;justify-content:center;padding:0 .6em;font-weight:500;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+input.name{border:0;font:inherit;font-weight:500;text-align:center;width:100%}
+.items{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.6em;min-height:0}
+.card{background:var(--card);border-radius:.9em;padding:.5em;display:flex;flex-direction:column;gap:.4em;cursor:pointer;border:2px solid transparent;min-height:9em}
+.card.sel{border-color:var(--acc)}
+.card .name{height:2.2em}
+.card p{flex:1;margin:0;padding:.3em .5em;text-align:center;color:var(--soft);font-size:.9em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;white-space:pre-wrap}
+.card p.empty{opacity:.55}
+.foot{display:flex;justify-content:space-between;align-items:center}
+.addcol{width:3.4em;flex:none;background:var(--col);border-radius:1em;color:var(--acc);font-size:1.8em;height:auto;min-height:6em;align-self:stretch}
+.addcol:hover{background:var(--card)}
+.panel{width:0;flex:none;overflow:hidden;transition:width .25s ease;background:var(--card);border-radius:1.2em 0 0 0}
+.main.open .panel{width:50%}
+.pin{width:50vw;height:100%;padding:1.2em 1.4em;display:flex;flex-direction:column;gap:.9em}
+.main.open .pin{width:100%}
+.pin .row{display:flex;gap:.5em;align-items:center}
+.pin h2{margin:0;flex:1;font-size:1.3em;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pin input.f,.pin textarea{width:100%;border:2px solid var(--line);border-radius:.8em;padding:.7em .9em;font:inherit;background:#fff;color:var(--ink)}
+.pin input.f{font-size:1.25em;font-weight:600}
+.pin textarea{flex:1;resize:none;line-height:1.55}
+.pin label{font-size:.85em;color:var(--soft);margin-bottom:-.5em}
+.hint{margin:auto;color:var(--soft);text-align:center}
+.empty-board{align-self:center;color:var(--soft);padding:1em}
+.top .bar.on{gap:.8em}button.txt{padding:0 1em;white-space:nowrap}
+#toast{position:fixed;left:50%;bottom:calc(1.2em + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:#fff;padding:.7em 1.2em;border-radius:1em;opacity:0;pointer-events:none;transition:opacity .2s;z-index:60}
+#toast.on{opacity:1}
+.grip{touch-action:none;cursor:grab;color:var(--soft);background:transparent;min-width:2em;font-size:1.1em}
+.chip{font-size:.8em;padding:.2em .8em;border-radius:1em;background:#fff;color:var(--soft)}
+.chip.late{background:#c62839;color:#fff}.chip.today{background:#f2a900;color:#1d1526}
+.card.ghost{position:fixed;z-index:50;pointer-events:none;opacity:.92;transform:rotate(2deg);box-shadow:0 10px 28px #0006;margin:0}
+.card.drag{opacity:.3}.col.over{outline:3px dashed var(--acc)}
+.drop{height:.45em;border-radius:1em;background:var(--acc);flex:none}
+@media (prefers-reduced-motion:reduce){.panel{transition:none}}
+@media (max-width:700px){.main.open .panel{width:100%}.main.open .board{display:none}.pin{width:100vw}}
+</style>
+</head>
+<body>
+<div class="top">
+  <button id="gear" aria-label="Theme settings"><svg viewBox="0 0 24 24"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.2h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.1.8 1.7 1l.4 2.7h4l.4-2.7c.6-.2 1.2-.6 1.7-1l2.5 1 2-3.5zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg></button>
+  <div class="bar" id="bar"><input type="range" id="hue" min="0" max="360" aria-label="Colour"><button class="txt" id="exp">Export backup</button><button class="txt" id="imp">Import backup</button><input type="file" id="file" accept=".json,application/json" hidden></div>
+</div>
+<div id="toast" role="status"></div>
+<div class="main" id="main">
+  <div class="board" id="board"></div>
+  <aside class="panel" id="panel"><div class="pin" id="pin"></div></aside>
+</div>
+<script>
+const I={
+ edit:'<svg viewBox="0 0 24 24"><path d="M3 17.3V21h3.7L17.8 9.9l-3.7-3.7zM20.7 7a1 1 0 0 0 0-1.4l-2.3-2.3a1 1 0 0 0-1.4 0l-1.8 1.8 3.7 3.7z"/></svg>',
+ plus:'<svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>',
+ trash:'<svg viewBox="0 0 24 24"><path d="M9 3h6l1 1h4v2H4V4h4zM5 8h14l-1 13H6z"/></svg>',
+ close:'<svg viewBox="0 0 24 24"><path d="M6 5l6 6 6-6 1.4 1.4-6 6 6 6L18 20l-6-6-6 6-1.4-1.4 6-6-6-6z"/></svg>'
+};
+const KEY='assignment-board-v1';
+let S={h:285,cols:[{id:1,name:'To Do',items:[]}],n:2};
+try{const r=localStorage.getItem(KEY);if(r)S=JSON.parse(r)}catch(e){}
+let open=null,editing=null,armed=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function hue(){document.documentElement.style.setProperty('--h',S.h)}
+const col=id=>S.cols.find(c=>c.id===id);
+const item=(c,a)=>{const k=col(c);return k&&k.items.find(i=>i.id===a)};
+function nameEl(kind,c,a,text){
+  const key=kind+c+'-'+(a||0);
+  if(editing===key)return `<input class="name" data-edit="${key}" value="${esc(text)}" maxlength="60" aria-label="Name">`;
+  return `<div class="name">${esc(text)}</div>`;
+}
+function delBtn(key,label){
+  return armed===key?`<button class="danger arm" data-act="del-${key}">Delete?</button>`:`<button class="danger" data-act="del-${key}" aria-label="${label}">${I.trash}</button>`;
+}
+function renderBoard(){
+  const b=$('board');const sx=b.scrollLeft;
+  b.innerHTML=S.cols.map(c=>`
+  <section class="col" data-c="${c.id}">
+    <div class="head">${nameEl('c',c.id,0,c.name)}
+      <button data-act="ec-${c.id}" aria-label="Rename column">${I.edit}</button>
+      <button data-act="ai-${c.id}" aria-label="Add assignment">${I.plus}</button></div>
+    <div class="items">${c.items.map(i=>`
+      <div class="card ${open&&open.a===i.id?'sel':''}" data-open="${c.id}:${i.id}">
+        <div class="head"><button class="grip" data-grip="${c.id}:${i.id}" aria-label="Drag to another column">⠿</button>${nameEl('a',c.id,i.id,i.name)}<button data-act="ea-${c.id}:${i.id}" aria-label="Rename assignment">${I.edit}</button></div>
+        <p class="${i.body?'':'empty'}">${esc(i.body||'Tap to add details')}</p>
+        <div class="foot">${delBtn('a'+c.id+':'+i.id,'Delete assignment')}${chip(i)}</div>
+      </div>`).join('')}</div>
+    <div class="foot"><span></span>${delBtn('c'+c.id,'Delete column')}</div>
+  </section>`).join('')+`<button class="addcol" data-act="addcol" aria-label="Add column">${I.plus}</button>`;
+  b.scrollLeft=sx;
+  const e=b.querySelector('[data-edit]');if(e){e.focus();e.select()}
+}
+function renderPanel(){
+  const m=$('main'),p=$('pin');
+  const it=open&&item(open.c,open.a);
+  if(!it){open=null;m.classList.remove('open');return}
+  m.classList.add('open');
+  p.innerHTML=`<div class="row"><h2>${esc(it.name)}</h2><button data-act="close" aria-label="Close">${I.close}</button></div>
+   <label for="t">Title</label><input class="f" id="t" value="${esc(it.title||'')}" placeholder="Title">
+   <label for="d">Due date</label><div class="row"><input class="f" type="date" id="d" value="${it.due||''}"><button data-act="cleardue">Clear</button></div>
+   <label for="b">Body</label><textarea id="b" placeholder="Write the assignment details here">${esc(it.body||'')}</textarea>`;
+  $('t').oninput=e=>{it.title=e.target.value;save()};
+  $('d').oninput=e=>{it.due=e.target.value;save();renderBoard()};
+  $('b').oninput=e=>{it.body=e.target.value;save();renderBoard()};
+}
+function commit(inp){
+  const k=inp.dataset.edit,v=inp.value.trim();editing=null;
+  const kind=k[0],[c,a]=k.slice(1).split('-').map(Number);
+  if(v){if(kind==='c'){col(c).name=v}else{item(c,a).name=v}save()}
+  renderBoard();renderPanel();
+}
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-act]');
+  if(t){
+    e.stopPropagation();
+    const a=t.dataset.act;
+    if(a!=='del-'+armed&&armed){armed=null}
+    if(a==='addcol'){const id=S.n++;S.cols.push({id,name:'New column',items:[]});editing='c'+id+'-0';save()}
+    else if(a==='close'){open=null}
+    else if(a==='cleardue'){item(open.c,open.a).due=''}
+    else if(a.startsWith('ec-')){editing='c'+a.slice(3)+'-0'}
+    else if(a.startsWith('ea-')){const[c,i]=a.slice(3).split(':');editing='a'+c+'-'+i}
+    else if(a.startsWith('ai-')){const c=col(+a.slice(3)),id=S.n++;c.items.push({id,name:'New assignment',title:'',body:''});open={c:c.id,a:id};editing='a'+c.id+'-'+id;save()}
+    else if(a.startsWith('del-')){
+      const key=a.slice(4);
+      if(armed!==key){armed=key;renderBoard();return}
+      armed=null;
+      if(key[0]==='c'){const id=+key.slice(1);S.cols=S.cols.filter(c=>c.id!==id);if(open&&open.c===id)open=null}
+      else{const[c,i]=key.slice(1).split(':').map(Number);col(c).items=col(c).items.filter(x=>x.id!==i);if(open&&open.a===i)open=null}
+      save();
+    }
+    renderBoard();renderPanel();return;
+  }
+  if(e.target.closest('[data-edit],[data-grip]'))return;
+  const c=e.target.closest('[data-open]');
+  if(c){const[x,y]=c.dataset.open.split(':').map(Number);open={c:x,a:y};armed=null;renderBoard();renderPanel();return}
+  if(armed){armed=null;renderBoard()}
+});
+document.addEventListener('focusout',e=>{if(e.target.dataset&&e.target.dataset.edit&&editing)commit(e.target)});
+document.addEventListener('keydown',e=>{
+  if(!(e.target.dataset&&e.target.dataset.edit))return;
+  if(e.key==='Enter')e.target.blur();
+  if(e.key==='Escape'){editing=null;renderBoard()}
+});
+function chip(i){
+  if(!i.due)return '<span></span>';
+  const d=new Date(i.due+'T00:00'),t=new Date();t.setHours(0,0,0,0);
+  const n=Math.round((d-t)/864e5),f=d.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+  return `<span class="chip ${n<0?'late':n===0?'today':''}">${n<0?'Overdue '+f:n===0?'Due today':'Due '+f}</span>`;
+}
+let drag=null;
+function slot(e){
+  drag.ghost.style.left=(e.clientX-drag.dx)+'px';drag.ghost.style.top=(e.clientY-drag.dy)+'px';
+  const bd=$('board'),r=bd.getBoundingClientRect();
+  if(e.clientX>r.right-70)bd.scrollLeft+=18;else if(e.clientX<r.left+70)bd.scrollLeft-=18;
+  document.querySelectorAll('.drop').forEach(x=>x.remove());
+  document.querySelectorAll('.col.over').forEach(x=>x.classList.remove('over'));
+  drag.to=null;
+  const el=document.elementFromPoint(e.clientX,e.clientY),c=el&&el.closest('.col');
+  if(!c)return;
+  c.classList.add('over');
+  const box=c.querySelector('.items'),cards=[...box.querySelectorAll('.card:not(.drag)')];
+  let idx=cards.filter(k=>{const q=k.getBoundingClientRect();return q.top+q.height/2<e.clientY}).length;
+  const line=document.createElement('div');line.className='drop';
+  box.insertBefore(line,cards[idx]||null);
+  drag.to={c:+c.dataset.c,idx};
+}
+function endDrag(drop){
+  if(!drag)return;
+  const d=drag;drag=null;d.ghost.remove();
+  if(drop&&d.to){
+    const from=col(d.c),it=from.items.find(x=>x.id===d.a);
+    from.items=from.items.filter(x=>x!==it);
+    col(d.to.c).items.splice(d.to.idx,0,it);
+    if(open&&open.a===d.a)open.c=d.to.c;
+    save();
+  }
+  renderBoard();renderPanel();
+}
+document.addEventListener('pointerdown',e=>{
+  const g=e.target.closest('[data-grip]');if(!g)return;
+  e.preventDefault();
+  const [c,a]=g.dataset.grip.split(':').map(Number),card=g.closest('.card'),r=card.getBoundingClientRect();
+  const ghost=card.cloneNode(true);ghost.classList.add('ghost');ghost.style.width=r.width+'px';
+  document.body.appendChild(ghost);card.classList.add('drag');
+  drag={c,a,ghost,dx:e.clientX-r.left,dy:e.clientY-r.top,to:null};
+  g.setPointerCapture(e.pointerId);slot(e);
+});
+document.addEventListener('pointermove',e=>{if(drag)slot(e)});
+document.addEventListener('pointerup',()=>endDrag(true));
+document.addEventListener('pointercancel',()=>endDrag(false));
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),3500)}
+async function doExport(){
+  const name='assignment-board-'+new Date().toISOString().slice(0,10)+'.json';
+  const data=JSON.stringify({app:'assignment-board',version:1,exported:new Date().toISOString(),data:S},null,2);
+  const P=window.Capacitor&&window.Capacitor.Plugins;
+  try{
+    if(P&&P.Filesystem&&P.Share){
+      const r=await P.Filesystem.writeFile({path:name,data,directory:'CACHE',encoding:'utf8'});
+      await P.Share.share({title:'Assignment Board backup',url:r.uri,dialogTitle:'Save backup to...'});
+    }else{
+      const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();a.remove();
+    }
+    toast('Backup ready: '+name);
+  }catch(e){if(!/cancel/i.test(String((e&&e.message)||e)))toast('Export failed. Please try again.')}
+}
+$('exp').onclick=doExport;
+$('imp').onclick=()=>$('file').click();
+$('file').onchange=e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const j=JSON.parse(r.result),d=j.data||j;
+      if(!d||!Array.isArray(d.cols)||!d.cols.every(c=>c&&Array.isArray(c.items)))throw 0;
+      const n=d.cols.reduce((s,c)=>s+c.items.length,0);
+      if(!confirm('Replace your current board with this backup ('+d.cols.length+' columns, '+n+' assignments)?'))return;
+      let m=0;d.cols.forEach(c=>{m=Math.max(m,+c.id||0);c.items.forEach(i=>m=Math.max(m,+i.id||0))});
+      S={h:+d.h||285,cols:d.cols,n:Math.max(+d.n||1,m+1)};
+      open=null;editing=null;armed=null;$('hue').value=S.h;hue();save();renderBoard();renderPanel();toast('Backup imported');
+    }catch(x){toast('That file is not a valid backup.')}
+  };
+  r.readAsText(f);
+};
+$('gear').onclick=()=>$('bar').classList.toggle('on');
+$('hue').value=S.h;
+$('hue').oninput=e=>{S.h=+e.target.value;hue();save()};
+hue();renderBoard();renderPanel();
+</script>
+</body>
+</html>
